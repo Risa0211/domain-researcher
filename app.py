@@ -199,10 +199,15 @@ if search_button and genre:
             if "削除済み" in search_type or "両方" in search_type:
                 results = scraper.search_deleted(kw, tlds=selected_tlds, max_pages=max_pages)
                 for d in results:
-                    # ドメイン名にキーワードが含まれるかチェック
                     domain_lower = d["domain"].lower()
+                    # ドメイン名にキーワードが含まれるかチェック
                     if kw.lower() in domain_lower:
                         d["source"] = "ドメイン名関連"
+                        d["matched_keyword"] = kw
+                        all_domains.setdefault(d["domain"], d)
+                    elif d["bl"] >= max(min_bl, 30) and d["age"] >= 2:
+                        # ドメイン名に含まれないが高評価なものは候補として保持
+                        d["source"] = "検索ヒット（名前不一致）"
                         d["matched_keyword"] = kw
                         all_domains.setdefault(d["domain"], d)
 
@@ -214,11 +219,18 @@ if search_button and genre:
                         d["source"] = "ドメイン名関連"
                         d["matched_keyword"] = kw
                         all_domains.setdefault(d["domain"], d)
+                    elif d["bl"] >= max(min_bl, 30) and d["age"] >= 2:
+                        d["source"] = "検索ヒット（名前不一致）"
+                        d["matched_keyword"] = kw
+                        all_domains.setdefault(d["domain"], d)
 
         except Exception as e:
             st.warning(f"「{kw}」の検索でエラー: {e}")
 
-    st.info(f"ドメイン名関連: {len(all_domains)}件（重複排除済み）")
+    # カウント
+    name_match = sum(1 for d in all_domains.values() if d.get("source") == "ドメイン名関連")
+    other_match = sum(1 for d in all_domains.values() if d.get("source") == "検索ヒット（名前不一致）")
+    st.info(f"ドメイン名関連: {name_match}件 / 検索ヒット（名前不一致・高評価）: {other_match}件")
 
     # --- Step 2: 高評価ドメインの検索（ドメイン名無関係） ---
     strong_count = 0
