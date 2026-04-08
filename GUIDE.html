@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中古ドメインリサーチツール - 使い方ガイド</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Hiragino Sans', 'Helvetica Neue', Arial, sans-serif; background: #f2f5f9; color: #262626; line-height: 1.8; }
+  .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: #fff; padding: 40px 20px; text-align: center; }
+  .header h1 { font-size: 28px; margin-bottom: 8px; }
+  .header p { font-size: 14px; opacity: 0.85; }
+  .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+  .card { background: #fff; border-radius: 12px; padding: 28px 24px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .card h2 { font-size: 20px; color: #152a58; border-left: 4px solid #1a73e8; padding-left: 12px; margin-bottom: 16px; }
+  .card h3 { font-size: 16px; color: #1a73e8; margin: 20px 0 8px; }
+  .url-box { background: #e3ecfe; border-radius: 8px; padding: 16px 20px; text-align: center; margin: 12px 0; }
+  .url-box a { color: #1a73e8; font-size: 18px; font-weight: bold; text-decoration: none; word-break: break-all; }
+  .url-box a:hover { text-decoration: underline; }
+  .step { display: flex; gap: 14px; margin: 16px 0; align-items: flex-start; }
+  .step-num { background: #1a73e8; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; }
+  .step-body strong { display: block; font-size: 15px; margin-bottom: 4px; }
+  ul, ol { padding-left: 20px; margin: 8px 0; }
+  li { margin: 4px 0; font-size: 14px; }
+  .note { background: #fff7da; border-left: 4px solid #f0ad4e; border-radius: 6px; padding: 12px 16px; margin: 12px 0; font-size: 14px; }
+  .tip { background: #e3f3e4; border-left: 4px solid #28a745; border-radius: 6px; padding: 12px 16px; margin: 12px 0; font-size: 14px; }
+  .badge { display: inline-block; background: #e3ecfe; color: #1a73e8; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin: 0 2px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th { background: #1a73e8; color: #fff; padding: 10px 12px; text-align: left; }
+  td { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; }
+  tr:nth-child(even) td { background: #f8f9fa; }
+  .footer { text-align: center; padding: 30px 20px; font-size: 12px; color: #878787; }
+  @media (max-width: 600px) {
+    .header h1 { font-size: 22px; }
+    .card { padding: 20px 16px; }
+    .card h2 { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <p>Eight Media - 社内ツールガイド</p>
+  <h1>中古ドメインリサーチツール</h1>
+  <p>ジャンルを選ぶだけで強い中古ドメインを自動リサーチ</p>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h2>ツール概要</h2>
+    <p>ジャンルを選択するだけで、そのジャンルに関連する<strong>取得可能な中古ドメイン</strong>を自動でリサーチするツールです。</p>
+    <ul>
+      <li><strong>ExpiredDomains.net</strong> から期限切れ・削除済みドメインを横断検索</li>
+      <li><strong>Wayback Machine</strong> で過去のサイト内容を確認（日本語サイトだったか等）</li>
+      <li><strong>Open PageRank API</strong> でドメインの評価スコアを取得</li>
+      <li>お名前.com / GoDaddy / Namecheap 等の<strong>取得先リンク</strong>を自動生成</li>
+    </ul>
+    <p style="margin-top: 12px;">全て<strong>無料</strong>で利用できます。</p>
+  </div>
+
+  <div class="card">
+    <h2>アクセス方法</h2>
+    <p>ブラウザでアクセスするだけで使えます。インストール不要です。</p>
+    <div class="url-box">
+      <a href="https://domain-researcher.streamlit.app/" target="_blank" rel="noopener">https://domain-researcher.streamlit.app/</a>
+    </div>
+    <p style="font-size: 13px; color: #878787;">PC・スマホどちらからでもアクセスできます。</p>
+  </div>
+
+  <div class="card">
+    <h2>基本的な使い方</h2>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>ジャンルを選択</strong>
+        <p>プルダウンから登録済みジャンルを選択するか、自由入力欄にジャンル名を入力します。</p>
+        <p style="margin-top: 6px; font-size: 13px;"><strong>登録済みジャンル：</strong>FX / 美容 / 転職 / ダイエット / 不動産 / クレジットカード / プログラミング / 恋愛・婚活 / 脱毛 / ガジェット / オンラインオリパ / トレカ</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>検索キーワードの確認・調整</strong>
+        <p>ジャンルを選択すると、関連する英語キーワードがチェックボックスで一覧表示されます。</p>
+        <ul>
+          <li><strong>除外したい場合</strong> → チェックを外す</li>
+          <li><strong>追加したい場合</strong> → カンマ区切りで入力</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>サイドバーでフィルター設定</strong>
+        <table>
+          <tr><th>項目</th><th>説明</th></tr>
+          <tr><td>対象TLD</td><td>.jp / .com / .net 等を選択</td></tr>
+          <tr><td>最低被リンク数</td><td>指定数以上のBLを持つドメインのみ表示</td></tr>
+          <tr><td>最低ドメイン年齢</td><td>指定年数以上の歴があるドメインのみ表示</td></tr>
+          <tr><td>Wayback Machine履歴</td><td>ONで過去サイトの情報を取得</td></tr>
+          <tr><td>高評価ドメインも検索</td><td>ドメイン名にキーワードを含まないが、過去にそのジャンルで運営されていた強いドメインも探す</td></tr>
+          <tr><td>ドメイン空き状況確認</td><td>ONでWHOIS確認（件数分時間がかかります）</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <strong>「リサーチ開始」ボタンを押す</strong>
+        <p>全キーワードで横断検索が行われます。キーワード数に応じて数分かかる場合があります。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <strong>結果を確認</strong>
+        <p>タブで切り替えて確認できます。</p>
+        <ul>
+          <li><span class="badge">全て</span> 全検索結果</li>
+          <li><span class="badge">ドメイン名関連</span> ドメイン名にジャンルキーワードを含むもの</li>
+          <li><span class="badge">高評価（過去運営関連）</span> ドメイン名にキーワードはないが、過去にそのジャンルで運営されていたもの</li>
+          <li><span class="badge">.jp / .com / .net</span> TLD別</li>
+        </ul>
+        <p style="margin-top: 8px;">各ドメインに<strong>お名前.com / GoDaddy / Namecheap</strong>のリンクが付いており、クリックで取得ページに飛べます。</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <strong>ドメイン詳細確認・CSVダウンロード</strong>
+        <ul>
+          <li>ページ下部のプルダウンで個別ドメインの詳細を確認</li>
+          <li>取得先ボタン（お名前.com / GoDaddy / Namecheap / Xserver / ムームー）から購入ページへ</li>
+          <li>「CSVダウンロード」で結果を保存</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2つの検索モードの違い</h2>
+    <table>
+      <tr><th>モード</th><th>内容</th><th>例（FXジャンル）</th></tr>
+      <tr>
+        <td><strong>ドメイン名関連</strong></td>
+        <td>ジャンルの関連キーワードがドメイン名に含まれるもの。メインの検索。</td>
+        <td>forex-guide.com<br>trading-info.net</td>
+      </tr>
+      <tr>
+        <td><strong>高評価（過去運営関連）</strong></td>
+        <td>ドメイン名にキーワードは含まれないが、Wayback Machineで確認して過去にそのジャンルのサイトだった高BLドメイン。</td>
+        <td>example123.com<br>（過去タイトル: FX比較ガイド）</td>
+      </tr>
+    </table>
+    <div class="note">
+      <strong>高評価モードの有効化：</strong>サイドバーの「高評価ドメインも検索」をONにしてください。Wayback Machineへのアクセスが増えるため、検索時間が長くなります。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>コンテンツ判定キーワード（日本語）とは</h2>
+    <p>「高評価ドメインも検索」をONにした場合のみ使用されます。</p>
+    <h3>仕組み</h3>
+    <ol>
+      <li>高BL（被リンク数が多い）ドメインを取得</li>
+      <li>Wayback Machineでそのドメインの過去のサイトタイトルを取得</li>
+      <li>タイトルに日本語の判定キーワード（例: 「FX」「証券」「投資」）が含まれるかチェック</li>
+      <li>含まれていれば「過去にそのジャンルのサイトだった」と判定し、結果に追加</li>
+    </ol>
+    <div class="tip">
+      <strong>編集可能：</strong>キーワード確認画面の「過去コンテンツ判定キーワード」の折りたたみを開くと、チェックボックスで除外・追加ができます。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>オプション設定</h2>
+    <h3>Open PageRank APIキー（無料）</h3>
+    <p>設定するとPageRankスコアも結果に表示されます。</p>
+    <ol>
+      <li><a href="https://www.domcop.com/openpagerank/auth/signup" target="_blank" rel="noopener">https://www.domcop.com/openpagerank/auth/signup</a> にアクセス</li>
+      <li>無料アカウントを作成</li>
+      <li>発行されたAPIキーをサイドバーの「Open PageRank APIキー」欄に入力</li>
+    </ol>
+    <p style="font-size: 13px; color: #878787; margin-top: 4px;">無料で1日100件まで取得可能です。</p>
+    <h3>ExpiredDomains パスワード</h3>
+    <p>入力しなくても検索できます。検索結果自体は変わりません。</p>
+    <h3>ドメイン空き状況確認</h3>
+    <p>ONにするとWHOISで各ドメインの登録状況を確認します。件数分の時間がかかるため、必要な時だけONにしてください。</p>
+  </div>
+
+  <div class="card">
+    <h2>ジャンル保存機能</h2>
+    <p>自由入力でジャンルを入れ、キーワードを追加・除外した後に<strong>「このキーワード設定をジャンルとして保存」</strong>ボタンを押すと、そのキーワード設定が保存されます。</p>
+    <p>次回以降、プルダウンに表示されるようになります。</p>
+  </div>
+
+  <div class="card">
+    <h2>最終確認の推奨事項</h2>
+    <p>このツールで候補を絞り込んだ後、以下の手動チェックを推奨します。</p>
+    <ol>
+      <li><strong>Ahrefsでドメインを確認</strong>
+        <ul>
+          <li>DR（ドメインレーティング）の確認</li>
+          <li>被リンクの質（スパムリンク比率）</li>
+          <li>被リンク元サイトの関連性</li>
+        </ul>
+      </li>
+      <li><strong>Wayback Machineで過去のサイトを目視確認</strong>
+        <ul>
+          <li>結果テーブルの「Wayback」リンクをクリック</li>
+          <li>スパムサイトや低品質サイトでなかったか確認</li>
+        </ul>
+      </li>
+      <li><strong>ドメインを取得</strong>
+        <ul>
+          <li>結果テーブルのお名前.com / GoDaddy等のリンクから取得ページへ</li>
+        </ul>
+      </li>
+    </ol>
+    <div class="note">
+      <strong>重要：</strong>このツールはあくまで候補のリストアップが目的です。ドメインの最終的な価値判断は、必ずAhrefsやWayback Machineで手動確認してから行ってください。
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>&copy; Eight Media - 中古ドメインリサーチツール ガイド</p>
+</div>
+
+</body>
+</html>
