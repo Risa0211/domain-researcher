@@ -49,60 +49,82 @@ class ExpiredDomainsScraper:
             print(f"ログインエラー: {e}")
             return False
 
+    # TLD別のURLパスマッピング
+    TLD_PATH_MAP = {
+        "expired": {
+            ".com": "/expired-com-domains/",
+            ".net": "/expired-net-domains/",
+            ".org": "/expired-org-domains/",
+            ".info": "/expired-info-domains/",
+            ".biz": "/expired-biz-domains/",
+            ".jp": "/expired-jp-domains/",
+        },
+        "deleted": {
+            ".com": "/deleted-com-domains/",
+            ".net": "/deleted-net-domains/",
+            ".org": "/deleted-org-domains/",
+            ".info": "/deleted-info-domains/",
+            ".biz": "/deleted-biz-domains/",
+            ".jp": "/deleted-jp-domains/",
+        },
+    }
+
     def search_expired(self, keyword: str, tlds: list = None, max_pages: int = 3) -> list:
-        """期限切れドメインを検索"""
-        return self._search_pages(
-            path="/expired-domains/",
-            keyword=keyword,
-            tlds=tlds,
-            max_pages=max_pages,
-        )
+        """期限切れドメインを検索（TLD別パスではキーワード検索不可のため通常パス使用）"""
+        if not tlds:
+            tlds = [".com", ".net", ".jp"]
+        tld_set = set(t.lower() for t in tlds)
 
-    def search_deleted(self, keyword: str, tlds: list = None, max_pages: int = 3) -> list:
-        """削除済みドメインを検索（取得可能性が高い）"""
-        return self._search_pages(
-            path="/deleted-domains/",
-            keyword=keyword,
-            tlds=tlds,
-            max_pages=max_pages,
-        )
-
-    # 後方互換
-    search = search_expired
-
-    def _search_pages(self, path: str, keyword: str, tlds: list = None, max_pages: int = 3) -> list:
-        """複数ページにわたって検索"""
         all_domains = []
-
         for page in range(max_pages):
             start = page * 25
-            url = f"{self.BASE_URL}{path}?q={keyword}&start={start}"
-
-            # TLDフィルタ
-            if tlds:
-                tld_map = {
-                    ".com": "fcom", ".net": "fnet", ".org": "forg",
-                    ".info": "finfo", ".biz": "fbiz", ".jp": "fjp",
-                }
-                for tld in tlds:
-                    param = tld_map.get(tld)
-                    if param:
-                        url += f"&{param}=1"
-
+            url = f"{self.BASE_URL}/expired-domains/?q={keyword}&start={start}"
             try:
                 resp = self.session.get(url, timeout=20)
                 domains = self._parse_results(resp.text)
-
                 if not domains:
                     break
-
+                # 結果側でTLDフィルタ
+                domains = [d for d in domains if d["tld"] in tld_set]
                 all_domains.extend(domains)
-                time.sleep(2)  # レート制限対策
+                time.sleep(2)
             except Exception as e:
-                print(f"検索エラー (ページ {page + 1}): {e}")
+                print(f"検索エラー (expired ページ {page + 1}): {e}")
                 break
+        return all_domains
+
+    def search_deleted(self, keyword: str, tlds: list = None, max_pages: int = 3) -> list:
+        """削除済みドメインを検索（TLD別パスでフィルタ可能）"""
+        if not tlds:
+            tlds = [".com", ".net", ".jp"]
+
+        all_domains = []
+        path_map = self.TLD_PATH_MAP["deleted"]
+
+        for tld in tlds:
+            path = path_map.get(tld)
+            if not path:
+                continue
+            for page in range(max_pages):
+                start = page * 25
+                url = f"{self.BASE_URL}{path}?q={keyword}&start={start}"
+                try:
+                    resp = self.session.get(url, timeout=20)
+                    domains = self._parse_results(resp.text)
+                    if not domains:
+                        break
+                    # 念のためTLDフィルタ
+                    domains = [d for d in domains if d["tld"] == tld]
+                    all_domains.extend(domains)
+                    time.sleep(2)
+                except Exception as e:
+                    print(f"検索エラー ({tld} ページ {page + 1}): {e}")
+                    break
 
         return all_domains
+
+    # 後方互換
+    search = search_expired
 
     def _parse_results(self, html: str) -> list:
         """検索結果HTMLをパースしてドメイン情報を抽出"""

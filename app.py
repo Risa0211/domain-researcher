@@ -199,16 +199,21 @@ if search_button and genre:
             if "削除済み" in search_type or "両方" in search_type:
                 results = scraper.search_deleted(kw, tlds=selected_tlds, max_pages=max_pages)
                 for d in results:
-                    d["source"] = "ドメイン名関連"
-                    d["matched_keyword"] = kw
-                    all_domains.setdefault(d["domain"], d)
+                    # ドメイン名にキーワードが含まれるかチェック
+                    domain_lower = d["domain"].lower()
+                    if kw.lower() in domain_lower:
+                        d["source"] = "ドメイン名関連"
+                        d["matched_keyword"] = kw
+                        all_domains.setdefault(d["domain"], d)
 
             if "期限切れ" in search_type or "両方" in search_type:
                 results = scraper.search_expired(kw, tlds=selected_tlds, max_pages=max_pages)
                 for d in results:
-                    d["source"] = "ドメイン名関連"
-                    d["matched_keyword"] = kw
-                    all_domains.setdefault(d["domain"], d)
+                    domain_lower = d["domain"].lower()
+                    if kw.lower() in domain_lower:
+                        d["source"] = "ドメイン名関連"
+                        d["matched_keyword"] = kw
+                        all_domains.setdefault(d["domain"], d)
 
         except Exception as e:
             st.warning(f"「{kw}」の検索でエラー: {e}")
@@ -384,7 +389,7 @@ if "results" in st.session_state:
         """ドメイン取得先のURLを生成"""
         name_only = domain.rsplit(".", 1)[0]  # TLDを除いた部分
         return {
-            "お名前.com": f"https://www.onamae.com/domain/dropcatch/detail/?d={domain}",
+            "お名前.com": f"https://www.onamae.com/domain/search/?d={name_only}",
             "GoDaddy": f"https://www.godaddy.com/domainsearch/find?domainToCheck={domain}",
             "Namecheap": f"https://www.namecheap.com/domains/registration/results/?domain={domain}",
             "Xserver": f"https://www.xdomain.ne.jp/?functype=domain-search&keyword={name_only}",
