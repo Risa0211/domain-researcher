@@ -5,6 +5,7 @@ import pandas as pd
 import time
 
 from scraper.expired_domains import ExpiredDomainsScraper
+from scraper.rakko_domains import RakkoDomainsScraper
 from scraper.genre_keywords import get_keywords, get_available_genres, save_genre
 from analyzers.pagerank import PageRankChecker
 from analyzers.wayback import WaybackChecker
@@ -66,6 +67,18 @@ max_pages = st.sidebar.slider(
     "検索ページ数（キーワードごと）",
     min_value=1, max_value=5, value=2,
     help="1ページ=約25件。キーワード数 x ページ数で検索するため、多いと時間がかかります",
+)
+
+st.sidebar.header("検索ソース")
+use_rakko = st.sidebar.checkbox(
+    "中古ドメイン販売屋さん（ラッコ）",
+    value=True,
+    help="ジャンル別に中古ドメインを検索。DR・価格付き。即購入可能。",
+)
+use_expired = st.sidebar.checkbox(
+    "ExpiredDomains.net",
+    value=True,
+    help="期限切れ・削除済みドメインを検索。無料で取得可能なドメインが見つかる。",
 )
 
 st.sidebar.header("詳細オプション")
@@ -174,63 +187,71 @@ else:
 
 # --- 検索実行 ---
 if search_button and genre:
-    scraper = ExpiredDomainsScraper(ed_username, ed_password)
-
-    # ログイン試行
     progress = st.progress(0, text="準備中...")
-    if ed_password:
-        if scraper.login():
-            st.success("ExpiredDomains.net ログイン成功")
-        else:
-            st.warning("ログインできませんでした。ログインなしで続行します")
-    else:
-        st.info("ログインなしで検索します")
-
-    # --- Step 1: 関連キーワードで横断検索 ---
-    progress.progress(5, text="関連キーワードで横断検索中...")
     all_domains = {}  # ドメイン名をキーにして重複排除
 
-    total_kws = len(domain_kws)
-    for i, kw in enumerate(domain_kws):
-        pct = 5 + int(45 * (i + 1) / total_kws)
-        progress.progress(pct, text=f"検索中: 「{kw}」 ({i+1}/{total_kws})")
+    # --- Step 0: 中古ドメイン販売屋さん（ラッコ）検索 ---
+    if use_rakko:
+        progress.progress(2, text="中古ドメイン販売屋さんを検索中...")
+        rakko = RakkoDomainsScraper()
+        rakko_results = rakko.search(content_kws[:10], max_pages=max_pages)
 
-        try:
-            if "削除済み" in search_type or "両方" in search_type:
-                results = scraper.search_deleted(kw, tlds=selected_tlds, max_pages=max_pages)
-                for d in results:
-                    domain_lower = d["domain"].lower()
-                    # ドメイン名にキーワードが含まれるかチェック
-                    if kw.lower() in domain_lower:
-                        d["source"] = "ドメイン名関連"
-                        d["matched_keyword"] = kw
-                        all_domains.setdefault(d["domain"], d)
-                    elif d["bl"] >= max(min_bl, 30) and d["age"] >= 2:
-                        # ドメイン名に含まれないが高評価なものは候補として保持
-                        d["source"] = "検索ヒット（名前不一致）"
-                        d["matched_keyword"] = kw
-                        all_domains.setdefault(d["domain"], d)
+        for d in rakko_results:
+            d["source"] = "中古ドメイン販売屋さん"
+            d["matched_keyword"] = "ラッコ検索"
+            all_domains.setdefault(d["domain"], d)
 
-            if "期限切れ" in search_type or "両方" in search_type:
-                results = scraper.search_expired(kw, tlds=selected_tlds, max_pages=max_pages)
-                for d in results:
-                    domain_lower = d["domain"].lower()
-                    if kw.lower() in domain_lower:
-                        d["source"] = "ドメイン名関連"
-                        d["matched_keyword"] = kw
-                        all_domains.setdefault(d["domain"], d)
-                    elif d["bl"] >= max(min_bl, 30) and d["age"] >= 2:
-                        d["source"] = "検索ヒット（名前不一致）"
-                        d["matched_keyword"] = kw
-                        all_domains.setdefault(d["domain"], d)
+        st.info(f"中古ドメイン販売屋さん: {len(rakko_results)}件（DR・価格付き / 即購入可能）")
 
-        except Exception as e:
-            st.warning(f"「{kw}」の検索でエラー: {e}")
+    # --- Step 1: ExpiredDomains.net 横断検索 ---
+    if use_expired:
+        scraper = ExpiredDomainsScraper(ed_username, ed_password)
+        if ed_password:
+            if scraper.login():
+                st.success("ExpiredDomains.net ログイン成功")
+            else:
+                st.warning("ログインできませんでした。ログインなしで続行します")
 
-    # カウント
-    name_match = sum(1 for d in all_domains.values() if d.get("source") == "ドメイン名関連")
-    other_match = sum(1 for d in all_domains.values() if d.get("source") == "検索ヒット（名前不一致）")
-    st.info(f"ドメイン名関連: {name_match}件 / 検索ヒット（名前不一致・高評価）: {other_match}件")
+        progress.progress(5, text="ExpiredDomains.net 横断検索中...")
+
+        total_kws = len(domain_kws)
+        for i, kw in enumerate(domain_kws):
+            pct = 5 + int(45 * (i + 1) / total_kws)
+            progress.progress(pct, text=f"検索中: 「{kw}」 ({i+1}/{total_kws})")
+
+            try:
+                if "削除済み" in search_type or "両方" in search_type:
+                    results = scraper.search_deleted(kw, tlds=selected_tlds, max_pages=max_pages)
+                    for d in results:
+                        domain_lower = d["domain"].lower()
+                        if kw.lower() in domain_lower:
+                            d["source"] = "ドメイン名関連"
+                            d["matched_keyword"] = kw
+                            all_domains.setdefault(d["domain"], d)
+                        elif d["bl"] >= max(min_bl, 30) and d["age"] >= 2:
+                            d["source"] = "検索ヒット（名前不一致）"
+                            d["matched_keyword"] = kw
+                            all_domains.setdefault(d["domain"], d)
+
+                if "期限切れ" in search_type or "両方" in search_type:
+                    results = scraper.search_expired(kw, tlds=selected_tlds, max_pages=max_pages)
+                    for d in results:
+                        domain_lower = d["domain"].lower()
+                        if kw.lower() in domain_lower:
+                            d["source"] = "ドメイン名関連"
+                            d["matched_keyword"] = kw
+                            all_domains.setdefault(d["domain"], d)
+                        elif d["bl"] >= max(min_bl, 30) and d["age"] >= 2:
+                            d["source"] = "検索ヒット（名前不一致）"
+                            d["matched_keyword"] = kw
+                            all_domains.setdefault(d["domain"], d)
+
+            except Exception as e:
+                st.warning(f"「{kw}」の検索でエラー: {e}")
+
+        name_match = sum(1 for d in all_domains.values() if d.get("source") == "ドメイン名関連")
+        other_match = sum(1 for d in all_domains.values() if d.get("source") == "検索ヒット（名前不一致）")
+        st.info(f"ExpiredDomains: ドメイン名関連 {name_match}件 / 名前不一致・高評価 {other_match}件")
 
     # --- Step 2: 高評価ドメインの検索（ドメイン名無関係） ---
     strong_count = 0
@@ -413,14 +434,16 @@ if "results" in st.session_state:
         display_data = []
         for d in domain_list:
             links = get_purchase_links(d["domain"])
+            is_rakko = d.get("source") == "中古ドメイン販売屋さん"
             row = {
                 "ドメイン": d["domain"],
                 "種別": d.get("source", ""),
-                "TLD": d["tld"],
+                "TLD": d.get("tld", ""),
                 "被リンク数": d.get("bl", 0),
-                "DP": d.get("dp", 0),
-                "年齢": d.get("age", 0),
-                "検索KW": d.get("matched_keyword", ""),
+                "BLD": d.get("bld", d.get("dp", 0)),
+                "DR": d.get("dr", 0),
+                "年齢": d.get("age_years", d.get("age", 0)),
+                "価格": d.get("price_text", "") if is_rakko else "",
             }
             if "page_rank" in d:
                 row["PageRank"] = d["page_rank"]
@@ -436,9 +459,11 @@ if "results" in st.session_state:
                 row["Wayback"] = d["wayback_url"]
 
             # 取得先リンク
-            row["お名前.com"] = links["お名前.com"]
-            row["GoDaddy"] = links["GoDaddy"]
-            row["Namecheap"] = links["Namecheap"]
+            if is_rakko and d.get("detail_url"):
+                row["購入ページ"] = d["detail_url"]
+            else:
+                row["お名前.com"] = links["お名前.com"]
+                row["GoDaddy"] = links["GoDaddy"]
 
             display_data.append(row)
 
@@ -449,10 +474,11 @@ if "results" in st.session_state:
             use_container_width=True,
             column_config={
                 "Wayback": st.column_config.LinkColumn("Wayback"),
+                "購入ページ": st.column_config.LinkColumn("購入ページ"),
                 "お名前.com": st.column_config.LinkColumn("お名前.com"),
                 "GoDaddy": st.column_config.LinkColumn("GoDaddy"),
-                "Namecheap": st.column_config.LinkColumn("Namecheap"),
                 "被リンク数": st.column_config.NumberColumn(format="%d"),
+                "DR": st.column_config.NumberColumn(format="%d"),
             },
         )
         return df
