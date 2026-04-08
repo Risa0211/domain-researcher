@@ -422,9 +422,9 @@ if "results" in st.session_state:
         """ドメイン取得先のURLを生成"""
         name_only = domain.rsplit(".", 1)[0]  # TLDを除いた部分
         return {
-            "お名前.com": f"https://www.onamae.com/domain/search/?d={name_only}",
+            "お名前.com新規": f"https://www.onamae.com/advanced/?d={name_only}",
+            "お名前.com中古": "https://www.onamae.com/auc/gtld/list",
             "GoDaddy": f"https://www.godaddy.com/domainsearch/find?domainToCheck={domain}",
-            "Namecheap": f"https://www.namecheap.com/domains/registration/results/?domain={domain}",
             "Xserver": f"https://www.xdomain.ne.jp/?functype=domain-search&keyword={name_only}",
             "ムームー": f"https://muumuu-domain.com/?mode=search&domain={name_only}",
         }
@@ -462,7 +462,8 @@ if "results" in st.session_state:
             if is_rakko and d.get("detail_url"):
                 row["購入ページ"] = d["detail_url"]
             else:
-                row["お名前.com"] = links["お名前.com"]
+                row["お名前.com新規"] = links["お名前.com新規"]
+                row["お名前.com中古"] = links["お名前.com中古"]
                 row["GoDaddy"] = links["GoDaddy"]
 
             display_data.append(row)
@@ -475,7 +476,8 @@ if "results" in st.session_state:
             column_config={
                 "Wayback": st.column_config.LinkColumn("Wayback"),
                 "購入ページ": st.column_config.LinkColumn("購入ページ"),
-                "お名前.com": st.column_config.LinkColumn("お名前.com"),
+                "お名前.com新規": st.column_config.LinkColumn("お名前.com新規"),
+                "お名前.com中古": st.column_config.LinkColumn("お名前.com中古"),
                 "GoDaddy": st.column_config.LinkColumn("GoDaddy"),
                 "被リンク数": st.column_config.NumberColumn(format="%d"),
                 "DR": st.column_config.NumberColumn(format="%d"),
@@ -524,16 +526,16 @@ if "results" in st.session_state:
             col1, col2, col3, col4 = st.columns(4)
             with col1:
                 st.metric("被リンク数", f"{d.get('bl', 0):,}")
-                st.metric("DP", f"{d.get('dp', 0):,}")
+                st.metric("BLD", f"{d.get('bld', d.get('dp', 0)):,}")
             with col2:
-                st.metric("ドメイン年齢", f"{d.get('age', 0)}年")
-                st.metric("PageRank", d.get("page_rank", "N/A"))
+                st.metric("DR", d.get("dr", "N/A"))
+                st.metric("年齢", f"{d.get('age_years', d.get('age', 0))}年")
             with col3:
                 st.metric("アーカイブ数", d.get("snapshots", "N/A"))
                 st.metric("空き状況", d.get("available", "未確認"))
             with col4:
                 st.metric("種別", d.get("source", ""))
-                st.metric("検索KW", d.get("matched_keyword", ""))
+                st.metric("価格", d.get("price_text", "N/A"))
 
             if d.get("had_japanese"):
                 st.success(f"日本語サイト歴あり: {d.get('sample_title', '')}")
@@ -545,6 +547,8 @@ if "results" in st.session_state:
             # 取得先リンク
             st.divider()
             st.write("**ドメイン取得先**")
+            if d.get("source") == "中古ドメイン販売屋さん" and d.get("detail_url"):
+                st.link_button("中古ドメイン販売屋さんで購入", d["detail_url"], type="primary", use_container_width=True)
             links = get_purchase_links(selected_domain)
             link_cols = st.columns(len(links))
             for i, (name, url) in enumerate(links.items()):
