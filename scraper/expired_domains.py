@@ -187,8 +187,12 @@ class ExpiredDomainsScraper:
         if not domain_name or "." not in domain_name:
             return None
 
-        # TLD抽出
-        tld = "." + domain_name.rsplit(".", 1)[-1].lower()
+        # TLD抽出（co.jp, or.jp 等の2段階TLDに対応）
+        parts = domain_name.lower().split(".")
+        if len(parts) >= 3 and parts[-1] == "jp" and parts[-2] in ("co", "or", "ne", "ac", "go", "gr", "ed"):
+            tld = f".{parts[-2]}.{parts[-1]}"
+        else:
+            tld = "." + parts[-1]
 
         info = {
             "domain": domain_name,

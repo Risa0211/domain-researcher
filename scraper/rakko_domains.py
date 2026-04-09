@@ -167,9 +167,13 @@ class RakkoDomainsScraper:
                     pass
                 break
 
-        # TLD
+        # TLD（co.jp, or.jp 等の2段階TLDに対応）
         if "." in domain_name:
-            info["tld"] = "." + domain_name.rsplit(".", 1)[-1].lower()
+            parts = domain_name.lower().split(".")
+            if len(parts) >= 3 and parts[-1] == "jp" and parts[-2] in ("co", "or", "ne", "ac", "go", "gr", "ed"):
+                info["tld"] = f".{parts[-2]}.{parts[-1]}"
+            else:
+                info["tld"] = "." + parts[-1]
 
         # AGEはbirth yearなので年齢に変換
         if info["age"] > 1900:

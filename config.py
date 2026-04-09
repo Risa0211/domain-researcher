@@ -11,6 +11,7 @@ OPENPAGERANK_API_KEY = ""
 # TLD優先順位
 TLD_PRIORITY = {
     ".jp": 1,
+    ".co.jp": 1,
     ".com": 2,
     ".net": 3,
     ".org": 4,

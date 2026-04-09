@@ -47,8 +47,8 @@ st.sidebar.header("フィルター設定")
 
 selected_tlds = st.sidebar.multiselect(
     "対象TLD",
-    options=[".jp", ".com", ".net", ".org", ".info", ".biz"],
-    default=[".jp", ".com", ".net"],
+    options=[".jp", ".co.jp", ".com", ".net", ".org", ".info", ".biz"],
+    default=[".jp", ".co.jp", ".com", ".net"],
 )
 
 min_bl = st.sidebar.number_input(
@@ -76,9 +76,9 @@ use_rakko = st.sidebar.checkbox(
     help="ジャンル別に中古ドメインを検索。DR・価格付き。即購入可能。",
 )
 use_expired = st.sidebar.checkbox(
-    "ExpiredDomains.net",
-    value=True,
-    help="期限切れ・削除済みドメインを検索。無料で取得可能なドメインが見つかる。",
+    "ExpiredDomains.net（現在不安定）",
+    value=False,
+    help="期限切れ・削除済みドメインを検索。※サイト側の仕様変更により結果が取得できない場合があります。",
 )
 
 st.sidebar.header("詳細オプション")
