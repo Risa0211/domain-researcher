@@ -102,6 +102,40 @@ search_strong = st.sidebar.checkbox(
     help="ドメイン名にキーワードを含まないが、過去にそのジャンルで運営されていた強いドメインも探します",
 )
 
+# --- サイドバー：使い方ガイド ---
+st.sidebar.divider()
+st.sidebar.header("使い方")
+
+st.sidebar.markdown(
+    """
+**ブラウザ版（Streamlit Cloud）で使う場合**
+1. ジャンルを選択
+2. キーワードを確認・調整
+3. 「リサーチ開始」を押す
+4. ※ラッコのみ利用可能
+
+---
+
+**ExpiredDomains.netも使う場合**
+
+初回のみ、ターミナルで以下を実行：
+```
+pip install playwright
+python -m playwright install chromium
+```
+その後、使うときに毎回以下を実行：
+```
+cd domain-researcher
+streamlit run app.py
+```
+ブラウザが開いたら、左のパスワード欄に
+ExpiredDomainsのパスワードを入力して検索。
+
+※ブラウザを閉じたら再度
+`streamlit run app.py` を実行してください。
+"""
+)
+
 
 # --- メイン：ジャンル選択 ---
 st.subheader("1. ジャンルを選択")

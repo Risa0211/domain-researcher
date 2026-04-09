@@ -71,12 +71,19 @@
   </div>
 
   <div class="card">
-    <h2>アクセス方法</h2>
-    <p>ブラウザでアクセスするだけで使えます。インストール不要です。</p>
+    <h2>アクセス方法（2通り）</h2>
+
+    <h3>方法1: ブラウザ版（中古ドメイン販売屋さんのみ）</h3>
+    <p>ブラウザでアクセスするだけ。インストール不要です。</p>
     <div class="url-box">
       <a href="https://domain-researcher.streamlit.app/" target="_blank" rel="noopener">https://domain-researcher.streamlit.app/</a>
     </div>
-    <p style="font-size: 13px; color: #878787;">PC・スマホどちらからでもアクセスできます。</p>
+
+    <h3>方法2: ローカル実行（全機能利用可能）</h3>
+    <p>ExpiredDomains.netも使いたい場合はこちら。初回セットアップ後、使うときに以下を実行：</p>
+    <pre style="background:#f0f2f6;padding:8px 12px;border-radius:4px;margin:6px 0;font-size:13px;">cd domain-researcher
+streamlit run app.py</pre>
+    <p style="font-size: 13px; color: #878787;">初回セットアップの手順は下記「ローカルセットアップ」を参照してください。</p>
   </div>
 
   <div class="card">
@@ -235,7 +242,52 @@
     </ol>
     <p style="font-size: 13px; color: #878787; margin-top: 4px;">無料で1日100件まで取得可能です。</p>
     <h3>ExpiredDomains パスワード</h3>
-    <p>入力しなくても検索できます。検索結果自体は変わりません。</p>
+    <p>ExpiredDomains.netを使う場合はログインが必要です。下記「ローカルセットアップ」を参照してください。</p>
+  </div>
+
+  <div class="card">
+    <h2>ローカルセットアップ（ExpiredDomains.netを使う場合）</h2>
+    <div class="note">
+      <strong>ブラウザ版（Streamlit Cloud）</strong>では中古ドメイン販売屋さん（ラッコ）のみ利用可能です。<br>
+      ExpiredDomains.netも使いたい場合は、以下のローカルセットアップが必要です。
+    </div>
+
+    <h3>初回セットアップ（1回だけ）</h3>
+    <p>ターミナル（Mac: ターミナル.app / Win: コマンドプロンプト）を開いて、以下を順番に実行してください。</p>
+    <ol>
+      <li>
+        <strong>Pythonがインストールされているか確認</strong>
+        <pre style="background:#f0f2f6;padding:8px 12px;border-radius:4px;margin:6px 0;font-size:13px;">python3 --version</pre>
+        <p style="font-size:13px;">「Python 3.x.x」と表示されればOK。表示されない場合は <a href="https://www.python.org/downloads/" target="_blank">python.org</a> からインストール。</p>
+      </li>
+      <li>
+        <strong>リポジトリをダウンロード</strong>
+        <pre style="background:#f0f2f6;padding:8px 12px;border-radius:4px;margin:6px 0;font-size:13px;">git clone https://github.com/Risa0211/domain-researcher.git
+cd domain-researcher</pre>
+      </li>
+      <li>
+        <strong>必要なパッケージをインストール</strong>
+        <pre style="background:#f0f2f6;padding:8px 12px;border-radius:4px;margin:6px 0;font-size:13px;">pip3 install -r requirements.txt
+python3 -m playwright install chromium</pre>
+      </li>
+    </ol>
+    <div class="tip">
+      ここまでは1回だけでOKです。次回以降は下の「使うとき」だけで起動できます。
+    </div>
+
+    <h3>使うとき（毎回）</h3>
+    <p>ターミナルで以下を実行してください。</p>
+    <pre style="background:#f0f2f6;padding:8px 12px;border-radius:4px;margin:6px 0;font-size:13px;">cd domain-researcher
+streamlit run app.py</pre>
+    <p>ブラウザが自動で開きます。左サイドバーにExpiredDomainsのパスワードを入力して検索してください。</p>
+    <p style="font-size:13px;">終了するときはターミナルで <code>Ctrl + C</code> を押してください。</p>
+
+    <h3>ExpiredDomains.netアカウント情報</h3>
+    <table>
+      <tr><th>項目</th><th>内容</th></tr>
+      <tr><td>ユーザー名</td><td>eightmedia</td></tr>
+      <tr><td>パスワード</td><td>社内共有のパスワードを使用してください</td></tr>
+    </table>
   </div>
 
   <div class="card">
