@@ -4,8 +4,12 @@ import streamlit as st
 import pandas as pd
 import time
 
-from scraper.expired_domains import ExpiredDomainsScraper
 from scraper.rakko_domains import RakkoDomainsScraper
+
+try:
+    from scraper.expired_domains_pw import ExpiredDomainsPlaywright, PLAYWRIGHT_AVAILABLE
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
 from scraper.genre_keywords import get_keywords, get_available_genres, save_genre
 from analyzers.pagerank import PageRankChecker
 from analyzers.wayback import WaybackChecker
@@ -75,11 +79,18 @@ use_rakko = st.sidebar.checkbox(
     value=True,
     help="ジャンル別に中古ドメインを検索。DR・価格付き。即購入可能。",
 )
-use_expired = st.sidebar.checkbox(
-    "ExpiredDomains.net（現在不安定）",
-    value=False,
-    help="期限切れ・削除済みドメインを検索。※サイト側の仕様変更により結果が取得できない場合があります。",
-)
+if PLAYWRIGHT_AVAILABLE:
+    use_expired = st.sidebar.checkbox(
+        "ExpiredDomains.net",
+        value=True,
+        help="期限切れ・削除済みドメインを検索。ログインが必要です（パスワードをサイドバーに入力）。",
+    )
+else:
+    use_expired = st.sidebar.checkbox(
+        "ExpiredDomains.net（要セットアップ）",
+        value=False,
+        help="ローカル環境でPlaywrightをインストールすると使えます。Streamlit Cloudでは利用不可。",
+    )
 
 st.sidebar.header("詳細オプション")
 check_wayback = st.sidebar.checkbox("Wayback Machine履歴を取得", value=True)
@@ -205,53 +216,64 @@ if search_button and genre:
 
     # --- Step 1: ExpiredDomains.net 横断検索 ---
     if use_expired:
-        scraper = ExpiredDomainsScraper(ed_username, ed_password)
-        if ed_password:
+        if not PLAYWRIGHT_AVAILABLE:
+            st.error("ExpiredDomains.netにはPlaywrightが必要です。ローカルで `pip install playwright && python -m playwright install chromium` を実行してください。")
+        elif not ed_password:
+            st.error("ExpiredDomains.netにはログインが必要です。サイドバーでパスワードを入力してください。")
+        else:
+            progress.progress(5, text="ExpiredDomains.net にログイン中...")
+            scraper = ExpiredDomainsPlaywright(ed_username, ed_password)
+
             if scraper.login():
                 st.success("ExpiredDomains.net ログイン成功")
             else:
-                st.warning("ログインできませんでした。ログインなしで続行します")
+                st.error("ExpiredDomains.net ログイン失敗。パスワードを確認してください。")
+                scraper.close()
+                scraper = None
 
-        progress.progress(5, text="ExpiredDomains.net 横断検索中...")
+            if scraper:
+                progress.progress(10, text="ExpiredDomains.net 横断検索中...")
 
-        total_kws = len(domain_kws)
-        for i, kw in enumerate(domain_kws):
-            pct = 5 + int(45 * (i + 1) / total_kws)
-            progress.progress(pct, text=f"検索中: 「{kw}」 ({i+1}/{total_kws})")
+                total_kws = len(domain_kws)
+                for i, kw in enumerate(domain_kws):
+                    pct = 10 + int(40 * (i + 1) / total_kws)
+                    progress.progress(pct, text=f"検索中: 「{kw}」 ({i+1}/{total_kws})")
 
-            try:
-                if "削除済み" in search_type or "両方" in search_type:
-                    results = scraper.search_deleted(kw, tlds=selected_tlds, max_pages=max_pages)
-                    for d in results:
-                        domain_lower = d["domain"].lower()
-                        if kw.lower() in domain_lower:
-                            d["source"] = "ドメイン名関連"
-                            d["matched_keyword"] = kw
-                            all_domains.setdefault(d["domain"], d)
-                        elif d["bl"] >= max(min_bl, 30) and d["age"] >= 2:
-                            d["source"] = "検索ヒット（名前不一致）"
-                            d["matched_keyword"] = kw
-                            all_domains.setdefault(d["domain"], d)
+                    try:
+                        if "削除済み" in search_type or "両方" in search_type:
+                            results = scraper.search_deleted(kw, tlds=selected_tlds, max_pages=max_pages)
+                            for d in results:
+                                domain_lower = d["domain"].lower()
+                                if kw.lower() in domain_lower:
+                                    d["source"] = "ドメイン名関連"
+                                    d["matched_keyword"] = kw
+                                    all_domains.setdefault(d["domain"], d)
+                                elif d["bl"] >= max(min_bl, 30) and d["age"] >= 2:
+                                    d["source"] = "検索ヒット（名前不一致）"
+                                    d["matched_keyword"] = kw
+                                    all_domains.setdefault(d["domain"], d)
 
-                if "期限切れ" in search_type or "両方" in search_type:
-                    results = scraper.search_expired(kw, tlds=selected_tlds, max_pages=max_pages)
-                    for d in results:
-                        domain_lower = d["domain"].lower()
-                        if kw.lower() in domain_lower:
-                            d["source"] = "ドメイン名関連"
-                            d["matched_keyword"] = kw
-                            all_domains.setdefault(d["domain"], d)
-                        elif d["bl"] >= max(min_bl, 30) and d["age"] >= 2:
-                            d["source"] = "検索ヒット（名前不一致）"
-                            d["matched_keyword"] = kw
-                            all_domains.setdefault(d["domain"], d)
+                        if "期限切れ" in search_type or "両方" in search_type:
+                            results = scraper.search_expired(kw, tlds=selected_tlds, max_pages=max_pages)
+                            for d in results:
+                                domain_lower = d["domain"].lower()
+                                if kw.lower() in domain_lower:
+                                    d["source"] = "ドメイン名関連"
+                                    d["matched_keyword"] = kw
+                                    all_domains.setdefault(d["domain"], d)
+                                elif d["bl"] >= max(min_bl, 30) and d["age"] >= 2:
+                                    d["source"] = "検索ヒット（名前不一致）"
+                                    d["matched_keyword"] = kw
+                                    all_domains.setdefault(d["domain"], d)
 
-            except Exception as e:
-                st.warning(f"「{kw}」の検索でエラー: {e}")
+                    except Exception as e:
+                        st.warning(f"「{kw}」の検索でエラー: {e}")
 
-        name_match = sum(1 for d in all_domains.values() if d.get("source") == "ドメイン名関連")
-        other_match = sum(1 for d in all_domains.values() if d.get("source") == "検索ヒット（名前不一致）")
-        st.info(f"ExpiredDomains: ドメイン名関連 {name_match}件 / 名前不一致・高評価 {other_match}件")
+                scraper.close()
+
+                name_match = sum(1 for d in all_domains.values() if d.get("source") == "ドメイン名関連")
+                other_match = sum(1 for d in all_domains.values() if d.get("source") == "検索ヒット（名前不一致）")
+                st.info(f"ExpiredDomains: ドメイン名関連 {name_match}件 / 名前不一致・高評価 {other_match}件")
 
     # --- Step 2: 高評価ドメインの検索（ドメイン名無関係） ---
     strong_count = 0
